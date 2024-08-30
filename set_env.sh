@@ -39,7 +39,7 @@ elif [[ ${kernel} =~ Linux ]] ; then # Linux
     # UofM Great Lakes
     if [[ ${hostname} =~ ^gl ]] ; then
         if [[ ${compiler} =~ intel ]] ; then
-            source greatlakes-intel.env
+            source ./greatlakes-intel.env
             use_default_templates=False
             mkmf_temp=greatlakes-intel.mk
         fi
@@ -56,8 +56,10 @@ fi
 
 # mkmf
 dir_mkmf=${srcdir}/mkmf
-if ${use_default_templates} ; then
+if [ ${use_default_templates} == True ] ; then
     mkmf_temp=${dir_mkmf}/templates/${mkmf_temp}
+else
+    mkmf_temp=${PWD}/${mkmf_temp}
 fi
 
 # make flags
