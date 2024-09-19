@@ -51,7 +51,7 @@ else
 fi
 
 # Use codes shipped with MOM6-examples
-if ${use_eg} ; then
+if [ ${use_eg} == False ] ; then
     srcdir=${srcdir}/MOM6-examples/src
 fi
 
