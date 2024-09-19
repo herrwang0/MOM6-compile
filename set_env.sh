@@ -19,21 +19,22 @@ if [[ ${kernel} =~ Darwin ]] ; then # MacOS
     fi
 elif [[ ${kernel} =~ Linux ]] ; then # Linux
     srcdir=$HOME/src
-    blddir=$SCRATCH/builds
     # NOAA Gaea C5
     if [[ ${hostname} =~ ^gaea5 ]] ; then
+        blddir=$SCRATCH/$USER/gfdl_o/builds
         if [[ ${compiler} =~ intel ]] ; then
-            source ncrc5-intel.env
+            source ./ncrc5-intel.env
             use_default_templates=True
             mkmf_temp=ncrc5-intel-classic.mk
         fi
     fi
     # NOAA Gaea C6
     if [[ ${hostname} =~ ^gaea6 ]] ; then
+        blddir=$SCRATCH/$USER/gfdl/builds
         if [[ ${compiler} =~ intel ]] ; then
-            source ncrc6-intel.env
-            use_default_templates=True
-            mkmf_temp=ncrc6-intel-classic.mk
+            source ./ncrc6.intel23.env
+            use_default_templates=False
+            mkmf_temp=ncrc6.intel23.mk
         fi
     fi
     # UofM Great Lakes
