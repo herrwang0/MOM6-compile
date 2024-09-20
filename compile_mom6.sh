@@ -42,6 +42,9 @@ dir_bld=${blddir}/${bld_subdir}/${name}/${compiler}/${target}
 mkdir -p ${dir_bld}
 cd ${dir_bld}
 
+echo "Use source files in "${srcdir}
+echo "Build model in "${dir_bld}
+
 # mkmf stuff
 rm -f path_names
 
