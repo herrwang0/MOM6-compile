@@ -10,7 +10,7 @@ else
 fi
 
 if [[ ${kernel} =~ Darwin ]] ; then # MacOS
-    srcdir=$HOME/models
+    srcdir_base=$HOME/models
     blddir=$HOME/builds
     if [[ ${compiler} =~ gcc ]] ; then
         source osx-gcc.env
@@ -18,7 +18,7 @@ if [[ ${kernel} =~ Darwin ]] ; then # MacOS
         mkmf_temp=osx-gcc10.mk
     fi
 elif [[ ${kernel} =~ Linux ]] ; then # Linux
-    srcdir=$HOME/src
+    srcdir_base=$HOME/src
     # NOAA Gaea C5
     if [[ ${hostname} =~ ^gaea5 ]] ; then
         blddir=$SCRATCH/$USER/gfdl_o/builds
@@ -50,14 +50,27 @@ else
     exit 1
 fi
 
-# Use codes shipped with MOM6-examples
-if [ ${use_eg} == true ] ; then
-    srcdir=${srcdir}/MOM6-examples/src
+# Auxiliary components codebase dir
+if [[ ${use_egaux} == true ]] ; then # Use codebases shipped with MOM6-examples
+    srcdir_aux=${srcdir_base}/MOM6-examples/src
+else
+    srcdir_aux=${srcdir_base}
 fi
 
-# mkmf
-dir_mkmf=${srcdir}/mkmf
-if [ ${use_default_templates} == true ] ; then
+# MOM6 codebase dir
+if [[ ${use_egmom6} == true ]] ; then # Use codebase shipped with MOM6-examples
+    srcdir_mom=${srcdir_base}/MOM6-examples/src
+else
+    srcdir_mom=${srcdir_base}
+fi
+
+# mkmf codebase dir
+if [[ ${use_egmkmf} == true ]] ; then # Use codebases shipped with MOM6-examples
+    dir_mkmf=${srcdir_base}/MOM6-examples/src/mkmf
+else
+    dir_mkmf=${srcdir_base}/mkmf
+fi
+if [[ ${use_default_templates} == true ]] ; then
     mkmf_temp=${dir_mkmf}/templates/${mkmf_temp}
 else
     mkmf_temp=${PWD}/${mkmf_temp}
@@ -71,3 +84,5 @@ fi
 if [[ $target =~ "debug" ]] ; then
     makeflags="$makeflags DEBUG=1"
 fi
+
+# Return env variables srcdir, dir_mkmf, dir_bld, compiler, mkmf_temp
