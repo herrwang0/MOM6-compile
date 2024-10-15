@@ -62,7 +62,7 @@ elif [[ ${build} =~ ^mom6oo ]] ; then # MOM6 ocean only
 elif [[ ${build} =~ mom6sis2 ]] ; then # MOM6 ice_ocean
     ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/FMS1,memory/dynamic_symmetric,drivers/FMS_cap,external} \
                                    ${srcdir_mom}/MOM6/src/{*,*/*} \
-                                   ${srcdir_mom}/{coupler,atmos_null,land_null,ice_param,icebergs/src,SIS2,FMS/coupler,FMS/include}"
+                                   ${srcdir_aux}/{coupler,atmos_null,land_null,ice_param,icebergs/src,SIS2,FMS/coupler,FMS/include}"
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' -c '-Duse_AM3_physics -D_USE_LEGACY_LAND_'  path_names
 fi
 # there is a problem with mkmf interpretting variables, so mkmfopt="-o '-I${dir_fms}' -l '-L${dir_fms} -lfms'" does not work
