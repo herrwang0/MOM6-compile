@@ -1,8 +1,11 @@
 #! /bin/bash
 build=mom6oo
-use_eg=False
-target=repro
 name=""
+target=repro
+use_fms2=false
+use_egaux=false
+use_egmom6=false
+use_egmkmf=false
 
 # Parse the arguments
 while [[ "$#" -gt 0 ]]; do
@@ -22,7 +25,83 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-source ./set_env.sh
+#------ set directories ------
+hostname=$(uname -n)
+kernel=$(uname -s)
+
+# For now, we use specific compiler for each platform.
+if [[ ${kernel} =~ Darwin ]] ; then
+    compiler="gcc"
+else
+    compiler="intel"
+fi
+
+if [[ ${kernel} =~ Darwin ]] ; then # MacOS
+    srcdir_base=$HOME/models
+    blddir=$HOME/builds
+    if [[ ${compiler} =~ gcc ]] ; then
+        source osx-gcc.env
+        use_default_templates=true
+        mkmf_temp=osx-gcc10.mk
+    fi
+elif [[ ${kernel} =~ Linux ]] ; then # Linux
+    srcdir_base=$HOME/src
+    # NOAA Gaea C5
+    if [[ ${hostname} =~ ^gaea5 ]] ; then
+        blddir=$SCRATCH/$USER/gfdl_o/builds
+        if [[ ${compiler} =~ intel ]] ; then
+            source ./ncrc5-intel.env
+            use_default_templates=true
+            mkmf_temp=ncrc5-intel-classic.mk
+        fi
+    fi
+    # NOAA Gaea C6
+    if [[ ${hostname} =~ ^gaea6 ]] ; then
+        blddir=$SCRATCH/$USER/gfdl/builds
+        if [[ ${compiler} =~ intel ]] ; then
+            source ./ncrc6.intel23.env
+            use_default_templates=false
+            mkmf_temp=ncrc6.intel23.mk
+        fi
+    fi
+    # UofM Great Lakes
+    if [[ ${hostname} =~ ^gl ]] ; then
+        if [[ ${compiler} =~ intel ]] ; then
+            source ./greatlakes-intel.env
+            use_default_templates=false
+            mkmf_temp=greatlakes-intel.mk
+        fi
+    fi
+else
+    echo "Warning: kernel not recognized. Exiting..." >&2
+    exit 1
+fi
+
+# Auxiliary components codebase dir
+if [[ ${use_egaux} == true ]] ; then # Use codebases shipped with MOM6-examples
+    srcdir_aux=${srcdir_base}/MOM6-examples/src
+else
+    srcdir_aux=${srcdir_base}
+fi
+
+# MOM6 codebase dir
+if [[ ${use_egmom6} == true ]] ; then # Use codebase shipped with MOM6-examples
+    srcdir_mom=${srcdir_base}/MOM6-examples/src
+else
+    srcdir_mom=${srcdir_base}
+fi
+
+# mkmf codebase dir
+if [[ ${use_egmkmf} == true ]] ; then # Use codebases shipped with MOM6-examples
+    dir_mkmf=${srcdir_base}/MOM6-examples/src/mkmf
+else
+    dir_mkmf=${srcdir_base}/mkmf
+fi
+if [[ ${use_default_templates} == true ]] ; then
+    mkmf_temp=${dir_mkmf}/templates/${mkmf_temp}
+else
+    mkmf_temp=${PWD}/${mkmf_temp}
+fi
 
 # FMS version for MOM6
 if [[ ${use_fms2} == true ]] ; then
@@ -31,6 +110,16 @@ else
     fmsver='FMS1'
 fi
 
+# make flags
+makeflags="NETCDF=3"
+if [[ $target =~ "repro" ]] ; then
+    makeflags="$makeflags REPRO=1"
+fi
+if [[ $target =~ "debug" ]] ; then
+    makeflags="$makeflags DEBUG=1"
+fi
+
+#------------------------------------------------------------------------------
 # create build directory
 if [[ ${build} =~ fms ]] ; then # FMS
     bld_name="libfms.a"
@@ -56,7 +145,7 @@ dir_bld=${blddir}/${bld_subdir}/${name}/${compiler}/${target}
 mkdir -p ${dir_bld}
 cd ${dir_bld}
 echo "Build model in "${dir_bld}
-
+#------------------------------------------------------------------------------
 # mkmf stuff
 rm -f path_names
 
@@ -75,6 +164,7 @@ elif [[ ${build} =~ mom6sis2 ]] ; then # MOM6 ice_ocean
 fi
 # there is a problem with mkmf interpretting variables, so mkmfopt="-o '-I${dir_fms}' -l '-L${dir_fms} -lfms'" does not work
 
+#------------------------------------------------------------------------------
 make ${makeflags} ${bld_name} -j
 
 echo ${dir_bld}
