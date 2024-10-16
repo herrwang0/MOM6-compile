@@ -25,7 +25,7 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-#------ set directories ------
+#------------------------------------------------------------------------------
 hostname=$(uname -n)
 kernel=$(uname -s)
 
