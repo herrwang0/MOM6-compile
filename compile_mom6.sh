@@ -135,6 +135,9 @@ elif [[ ${build} =~ ^mom6 ]] ; then # MOM6
         bld_subdir="MOM6/ice_ocean_SIS2"
         echo "Build MOM6-SIS2, use source files in "${srcdir_mom}
         echo "  and "${srcdir_aux}
+    else
+        echo "Warning: --build unrecognized MOM6 build. Exiting..." >&2
+        exit 1
     fi
 else
     echo "Warning: --build not recognized. Exiting..." >&2
