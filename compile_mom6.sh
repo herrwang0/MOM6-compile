@@ -57,7 +57,7 @@ elif [[ ${kernel} =~ Linux ]] ; then # Linux
     fi
     # NOAA Gaea C6
     if [[ ${hostname} =~ ^gaea6 ]] ; then
-        blddir=$SCRATCH/$USER/gfdl/builds
+        blddir=$SCRATCH/$USER/bil-coastal-gfdl/builds
         if [[ ${compiler} =~ intel ]] ; then
             source ./ncrc6.intel23.env
             use_default_templates=false
