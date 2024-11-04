@@ -15,6 +15,7 @@ while [[ "$#" -gt 0 ]]; do
         -t|--target) target="$2"; shift ;;  # Target: repro, debug
         -f|--fms) fms="$2"; shift ;;  # FMS library tag
         --fms2) use_fms2=true ;; # Use FMS2
+        --nonsym) use_nonsym=true ;; # Use nonsymmetric dynamic memory
         --egaux) use_egaux=true ;; # Use MOM6-examples code for non-MOM6 component
         --egmom6) use_egmom6=true ;; # Use MOM6-examples code for MOM6
         --egmkmf) use_egmkmf=true ;; # Use MOM6-examples code for mkmf
@@ -110,6 +111,13 @@ else
     fmsver='FMS1'
 fi
 
+# Dynamic memory type for MOM6
+if [[ ${use_nonsym} == true ]] ; then
+    mem='dynamic_nonsymmetric'
+else
+    mem='dynamic_symmetric'
+fi
+
 # make flags
 makeflags="NETCDF=3"
 if [[ $target =~ "repro" ]] ; then
@@ -135,6 +143,9 @@ elif [[ ${build} =~ ^mom6 ]] ; then # MOM6
         bld_subdir="MOM6/ice_ocean_SIS2"
         echo "Build MOM6-SIS2, use source files in "${srcdir_mom}
         echo "  and "${srcdir_aux}
+    else
+        echo "Warning: --build unrecognized MOM6 build. Exiting..." >&2
+        exit 1
     fi
 else
     echo "Warning: --build not recognized. Exiting..." >&2
@@ -153,11 +164,11 @@ if [[ ${build} =~ fms ]] ; then # FMS
     ${dir_mkmf}/bin/list_paths -l ${srcdir_aux}/FMS
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -c '-Duse_libMPI -Duse_netCDF' path_names
 elif [[ ${build} =~ ^mom6oo ]] ; then # MOM6 ocean only
-    ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/dynamic_symmetric,drivers/solo_driver,external} \
+    ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/${mem},drivers/solo_driver,external} \
                                    ${srcdir_mom}/MOM6/src/{*,*/*}"
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' path_names
 elif [[ ${build} =~ mom6sis2 ]] ; then # MOM6 ice_ocean
-    ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/dynamic_symmetric,drivers/FMS_cap,external} \
+    ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/${mem},drivers/FMS_cap,external} \
                                    ${srcdir_mom}/MOM6/src/{*,*/*} \
                                    ${srcdir_aux}/{coupler,atmos_null,land_null,ice_param,icebergs/src,SIS2,FMS/coupler,FMS/include}"
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' -c '-Duse_AM3_physics -D_USE_LEGACY_LAND_'  path_names

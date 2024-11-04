@@ -9,6 +9,7 @@ All codes are assumed to stored in `$USER/src`. All builds are placed in `build`
 * -n: Name. Name for the build
 * -t: Target. Either `repro` or `debug`
 * -f: FMS library build name. Required for ocean-only or SIS2 coupled MOM6
+* --nonsym: Use nonsymmetric dynamic memory
 * --fms2: Use FMS2 infra for MOM6
 * --egaux: Use codebase in MOM6-examples for non-MOM6 components
 * --egmom6: Use codebase in MOM6-examples for MOM6
