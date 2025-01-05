@@ -1,4 +1,8 @@
 #! /bin/bash
+hostname=$(uname -n)
+kernel=$(uname -s)
+
+# Defaults
 build=mom6oo
 name=""
 target=repro
@@ -6,6 +10,11 @@ use_fms2=false
 use_egaux=false
 use_egmom6=false
 use_egmkmf=false
+if [[ ${kernel} =~ Darwin ]] ; then
+    compiler="gcc"
+else
+    compiler="intel"
+fi
 
 # Parse the arguments
 while [[ "$#" -gt 0 ]]; do
@@ -14,6 +23,7 @@ while [[ "$#" -gt 0 ]]; do
         -n|--name) name="$2"; shift ;;  # Set the filename
         -t|--target) target="$2"; shift ;;  # Target: repro, debug
         -f|--fms) fms="$2"; shift ;;  # FMS library tag
+        -c|--compiler) compiler="$2" ; shift ;; # compiler name
         --fms2) use_fms2=true ;; # Use FMS2
         --nonsym) use_nonsym=true ;; # Use nonsymmetric dynamic memory
         --egaux) use_egaux=true ;; # Use MOM6-examples code for non-MOM6 component
@@ -25,17 +35,7 @@ while [[ "$#" -gt 0 ]]; do
     esac
     shift
 done
-
 #------------------------------------------------------------------------------
-hostname=$(uname -n)
-kernel=$(uname -s)
-
-# For now, we use specific compiler for each platform.
-if [[ ${kernel} =~ Darwin ]] ; then
-    compiler="gcc"
-else
-    compiler="intel"
-fi
 
 if [[ ${kernel} =~ Darwin ]] ; then # MacOS
     srcdir_base=$HOME/models
@@ -54,6 +54,10 @@ elif [[ ${kernel} =~ Linux ]] ; then # Linux
             source ./ncrc5-intel.env
             use_default_templates=true
             mkmf_temp=ncrc5-intel-classic.mk
+        elif [[ ${compiler} =~ gcc ]] ; then
+            source ./ncrc-gcc.env
+            use_default_templates=true
+            mkmf_temp=ncrc5-gcc.mk
         fi
     fi
     # NOAA Gaea C6
@@ -63,6 +67,10 @@ elif [[ ${kernel} =~ Linux ]] ; then # Linux
             source ./ncrc6.intel23.env
             use_default_templates=false
             mkmf_temp=ncrc6.intel23.mk
+        elif [[ ${compiler} =~ gcc ]] ; then
+            source ./ncrc-gcc.env
+            use_default_templates=true
+            mkmf_temp=ncrc5-gcc.mk
         fi
     fi
     # UofM Great Lakes
