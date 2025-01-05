@@ -57,7 +57,7 @@ elif [[ ${kernel} =~ Linux ]] ; then # Linux
         elif [[ ${compiler} =~ gcc ]] ; then
             source ./ncrc-gcc.env
             use_default_templates=true
-            mkmf_temp=ncrc5-gcc.mk
+            mkmf_temp=ncrc5-gnu.mk
         fi
     fi
     # NOAA Gaea C6
@@ -70,7 +70,7 @@ elif [[ ${kernel} =~ Linux ]] ; then # Linux
         elif [[ ${compiler} =~ gcc ]] ; then
             source ./ncrc-gcc.env
             use_default_templates=true
-            mkmf_temp=ncrc5-gcc.mk
+            mkmf_temp=ncrc5-gnu.mk
         fi
     fi
     # UofM Great Lakes
