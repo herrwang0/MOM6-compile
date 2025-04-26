@@ -147,6 +147,9 @@ elif [[ ${build} =~ ^mom6 ]] ; then # MOM6
     if [[ ${build} =~ mom6oo ]] ; then # ocean only
         bld_subdir="MOM6/ocean_only"
         echo "Build MOM6 ocean only, use source files in "${srcdir_mom}
+    elif [[ ${build} =~ mom6_test_EOS ]] ; then # unit test
+        bld_subdir="MOM6/test_MOM_EOS"
+        echo "Build MOM6 test_MOM_EOS, use source files in "${srcdir_mom}
     elif [[ ${build} =~ mom6sis2 ]] ; then # ice_ocean
         bld_subdir="MOM6/ice_ocean_SIS2"
         echo "Build MOM6-SIS2, use source files in "${srcdir_mom}
@@ -173,6 +176,10 @@ if [[ ${build} =~ fms ]] ; then # FMS
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -c '-Duse_libMPI -Duse_netCDF' path_names
 elif [[ ${build} =~ ^mom6oo ]] ; then # MOM6 ocean only
     ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/${mem},drivers/solo_driver,external} \
+                                   ${srcdir_mom}/MOM6/src/{*,*/*}"
+    ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' path_names
+elif [[ ${build} =~ ^mom6_test_EOS ]] ; then # MOM6 test_MOM_EOS
+    ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/${mem},drivers/unit_tests/test_MOM_EOS.F90,external} \
                                    ${srcdir_mom}/MOM6/src/{*,*/*}"
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' path_names
 elif [[ ${build} =~ mom6sis2 ]] ; then # MOM6 ice_ocean
