@@ -7,9 +7,16 @@ build=mom6oo
 name=""
 target=repro
 use_fms2=false
-use_egaux=false
-use_egmom6=false
-use_egmkmf=false
+use_nonsym=false
+use_eg_aux=false
+use_eg_mom6=false
+use_cefi_aux=false
+use_cefi_mom6=false
+if [[ ${use_eg_aux} == true || ${use_cefi_aux} == true ]]; then
+    use_aux_mkmf=true
+else
+    use_aux_mkmf=false
+fi
 if [[ ${kernel} =~ Darwin ]] ; then
     compiler="gcc"
 else
@@ -26,9 +33,11 @@ while [[ "$#" -gt 0 ]]; do
         -c|--compiler) compiler="$2" ; shift ;; # compiler name
         --fms2) use_fms2=true ;; # Use FMS2
         --nonsym) use_nonsym=true ;; # Use nonsymmetric dynamic memory
-        --egaux) use_egaux=true ;; # Use MOM6-examples code for non-MOM6 component
-        --egmom6) use_egmom6=true ;; # Use MOM6-examples code for MOM6
-        --egmkmf) use_egmkmf=true ;; # Use MOM6-examples code for mkmf
+        --eg_aux) use_eg_aux=true ;; # Use MOM6-examples code for non-MOM6 component
+        --eg_mom6) use_eg_mom6=true ;; # Use MOM6-examples code for MOM6
+        --cefi_aux) use_cefi_aux=true ;; # Use CEFI-regional-MOM6 code for non-MOM6 component
+        --cefi_mom6) use_cefi_mom6=true ;; # Use CEFI-regional-MOM6 code for MOM6
+        --aux_mkmf) use_aux_mkmf=true ;; # Use MOM6-examples code for mkmf
         --) shift; break ;;  # End of all options
         -*|--*) echo "Unknown option $1" >&2; exit 1 ;;
         *) echo "Unknown parameter $1" >&2; exit 1 ;;
@@ -87,22 +96,33 @@ else
 fi
 
 # Auxiliary components codebase dir
-if [[ ${use_egaux} == true ]] ; then # Use codebases shipped with MOM6-examples
+if [[ ${use_eg_aux} == true ]] ; then # Use codebases shipped with MOM6-examples
     srcdir_aux=${srcdir_base}/MOM6-examples/src
+elif [[ ${use_cefi_aux} == true ]] ; then # Use codebases shipped with CEFI-regional-MOM6
+    srcdir_aux=${srcdir_base}/CEFI-regional-MOM6/src
 else
     srcdir_aux=${srcdir_base}
 fi
 
 # MOM6 codebase dir
-if [[ ${use_egmom6} == true ]] ; then # Use codebase shipped with MOM6-examples
+if [[ ${use_eg_mom6} == true ]] ; then # Use codebase shipped with MOM6-examples
     srcdir_mom=${srcdir_base}/MOM6-examples/src
+elif [[ ${use_cefi_mom6} == true ]] ; then # Use codebases shipped with CEFI-regional-MOM6
+    srcdir_mom=${srcdir_base}/CEFI-regional-MOM6/src
 else
     srcdir_mom=${srcdir_base}
 fi
 
 # mkmf codebase dir
-if [[ ${use_egmkmf} == true ]] ; then # Use codebases shipped with MOM6-examples
-    dir_mkmf=${srcdir_base}/MOM6-examples/src/mkmf
+if [[ ${use_aux_mkmf} == true ]] ; then
+    if [[ ${use_eg_aux} == true ]] ; then # Use codebases shipped with MOM6-examples
+        dir_mkmf=${srcdir_base}/MOM6-examples/src/mkmf
+    elif [[ ${use_cefi_aux} == true ]] ; then # Use codebases shipped with CEFI-regional-MOM6
+        dir_mkmf=${srcdir_base}/CEFI-regional-MOM6/src/mkmf
+    else
+        echo "Warning: use_aux_mkmf is True but neither use_eg_aux nor use_cefi_aux is True. Exiting..." >&2
+        exit 1
+    fi
 else
     dir_mkmf=${srcdir_base}/mkmf
 fi
@@ -184,9 +204,20 @@ elif [[ ${build} =~ ^mom6_test_EOS ]] ; then # MOM6 test_MOM_EOS
     ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' path_names
 elif [[ ${build} =~ mom6sis2 ]] ; then # MOM6 ice_ocean
     ${dir_mkmf}/bin/list_paths -l "${srcdir_mom}/MOM6/config_src/{infra/${fmsver},memory/${mem},drivers/FMS_cap,external} \
-                                   ${srcdir_mom}/MOM6/src/{*,*/*} \
-                                   ${srcdir_aux}/{coupler,atmos_null,land_null,ice_param,icebergs/src,SIS2,FMS/coupler,FMS/include}"
-    ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' -c '-Duse_AM3_physics -D_USE_LEGACY_LAND_'  path_names
+                                   ${srcdir_mom}/MOM6/src/{*,*/*}      \
+                                   ${srcdir_aux}/coupler/{*.f90,*.F90} \
+                                   ${srcdir_aux}/coupler/{shared,full} \
+                                   ${srcdir_aux}/atmos_null            \
+                                   ${srcdir_aux}/land_null             \
+                                   ${srcdir_aux}/ice_param             \
+                                   ${srcdir_aux}/icebergs/src          \
+                                   ${srcdir_aux}/SIS2                  \
+                                   ${srcdir_aux}/FMS/{coupler,include}"
+    compile_opts='-Duse_AM3_physics -D_USE_LEGACY_LAND_'
+    if [[ ${fmsver} == "FMS2" ]]; then
+        compile_opts="${compile_opts} -DUSE_FMS2_IO"
+    fi
+    ${dir_mkmf}/bin/mkmf -t ${mkmf_temp} -p ${bld_name} -o '-I${dir_fms}' -l '-L${dir_fms} -lfms' -c "${compile_opts}" path_names
 fi
 # there is a problem with mkmf interpretting variables, so mkmfopt="-o '-I${dir_fms}' -l '-L${dir_fms} -lfms'" does not work
 
